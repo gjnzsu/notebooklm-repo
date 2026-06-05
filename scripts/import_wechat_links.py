@@ -19,7 +19,6 @@ if hasattr(sys.stderr, "reconfigure"):
 DEFAULT_NOTEBOOK_TITLE = "微信优秀文章"
 FETCH_SCRIPT = Path(r"C:\Users\gjnzsu\.codex\skills\qiaomu-anything-to-notebooklm\scripts\fetch_url.sh")
 BASH_EXE = Path(r"C:\Program Files\Git\bin\bash.exe")
-AUTH_SCRIPT = Path(__file__).with_name("Invoke-NotebookLmAuthRefresh.ps1")
 FETCH_HELPER = Path(__file__).with_name("fetch_weixin_article.py")
 
 
@@ -168,23 +167,13 @@ def save_article_file(article, temp_dir):
     return target
 
 
-def ensure_auth(skip_auth_refresh):
-    if skip_auth_refresh:
+def ensure_login(skip_login, login_browser):
+    if skip_login:
         return
-    result = run_command(
-        [
-            "powershell.exe",
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-File",
-            str(AUTH_SCRIPT),
-        ],
-        check=False,
-    )
+    result = run_command(["notebooklm", "login", "--browser", login_browser], check=False)
     if result.returncode != 0:
         raise RuntimeError(
-            "NotebookLM auth refresh failed.\n"
+            "NotebookLM login failed.\n"
             f"stdout:\n{result.stdout}\n"
             f"stderr:\n{result.stderr}"
         )
@@ -276,14 +265,16 @@ def main():
     parser.add_argument("--date-ymd", default=time.strftime("%Y%m%d"))
     parser.add_argument("--link-dir", default=os.getcwd())
     parser.add_argument("--temp-dir", default=str(Path(tempfile.gettempdir()) / "notebooklm-wechat-import"))
-    parser.add_argument("--skip-auth-refresh", action="store_true")
+    parser.add_argument("--login-browser", default="chrome", choices=["chromium", "chrome", "msedge"])
+    parser.add_argument("--skip-login", action="store_true")
+    parser.add_argument("--skip-auth-refresh", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     if args.notebook_title_b64:
         import base64
         args.notebook_title = base64.b64decode(args.notebook_title_b64).decode("utf-8")
 
-    ensure_auth(args.skip_auth_refresh)
+    ensure_login(args.skip_login or args.skip_auth_refresh, args.login_browser)
 
     temp_dir = Path(args.temp_dir)
     temp_dir.mkdir(parents=True, exist_ok=True)
