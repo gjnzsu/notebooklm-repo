@@ -1,14 +1,14 @@
 [CmdletBinding()]
 param(
     [string]$TaskName = "NotebookLM Auth Refresh",
-    [int]$IntervalMinutes = 15,
+    [int]$IntervalMinutes = 60,
     [switch]$IncludeInteractiveLoginFallback
 )
 
 $ErrorActionPreference = "Stop"
 
-if ($IntervalMinutes -lt 15 -or $IntervalMinutes -gt 20) {
-    throw "IntervalMinutes must be between 15 and 20."
+if ($IntervalMinutes -lt 15 -or $IntervalMinutes -gt 1440) {
+    throw "IntervalMinutes must be between 15 and 1440."
 }
 
 $scriptPath = Join-Path $PSScriptRoot "Invoke-NotebookLmAuthRefresh.ps1"
