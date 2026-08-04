@@ -4,6 +4,9 @@ param(
     [string]$DateYmd = (Get-Date).ToString("yyyyMMdd"),
     [string]$LinkDir = (Get-Location).Path,
     [string]$TempDir = (Join-Path $env:TEMP "notebooklm-wechat-import"),
+    [ValidateSet("chromium", "chrome", "msedge")]
+    [string]$LoginBrowser = "chrome",
+    [switch]$SkipLogin,
     [switch]$SkipAuthRefresh
 )
 
@@ -23,11 +26,12 @@ $args = @(
     "--notebook-title-b64", $notebookTitleB64,
     "--date-ymd", $DateYmd,
     "--link-dir", $LinkDir,
-    "--temp-dir", $TempDir
+    "--temp-dir", $TempDir,
+    "--login-browser", $LoginBrowser
 )
 
-if ($SkipAuthRefresh) {
-    $args += "--skip-auth-refresh"
+if ($SkipLogin -or $SkipAuthRefresh) {
+    $args += "--skip-login"
 }
 
 & python @args
